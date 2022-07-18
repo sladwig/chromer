@@ -471,12 +471,14 @@ func findSession(_path string) string {
 	return cfile
 }
 
-func tabPrintf(format string, tab *Tab, includeHistory bool) {
+func tabPrintf(format string, tab *Tab, includeHistory bool, win *Window) {
 	if includeHistory {
 		for _, item := range tab.History {
 			s := strings.Replace(format, "%u", item.Url, -1)
 			s = strings.Replace(s, "%g", tab.Group, -1)
 			s = strings.Replace(s, "%t", item.Title, -1)
+			s = strings.Replace(s, "%i", fmt.Sprint(tab.Id), -1)
+			s = strings.Replace(s, "%w", fmt.Sprint(win.Id), -1)
 			s = strings.Replace(s, "\\n", "\n", -1)
 			s = strings.Replace(s, "\\t", "\t", -1)
 			s = strings.Replace(s, "\\0", "\x00", -1)
@@ -487,6 +489,8 @@ func tabPrintf(format string, tab *Tab, includeHistory bool) {
 		s := strings.Replace(format, "%u", tab.Url, -1)
 		s = strings.Replace(s, "%g", tab.Group, -1)
 		s = strings.Replace(s, "%t", tab.Title, -1)
+		s = strings.Replace(s, "%i", fmt.Sprint(tab.Id), -1)
+		s = strings.Replace(s, "%w", fmt.Sprint(win.Id), -1)
 		s = strings.Replace(s, "\\n", "\n", -1)
 		s = strings.Replace(s, "\\t", "\t", -1)
 		s = strings.Replace(s, "\\0", "\x00", -1)
@@ -505,8 +509,8 @@ func main() {
 
 	flag.BoolVar(&jsonFlag, "json", false, "Produce json formatted output. Note that this includes all tabs along with their history and any corresponding metadata. Useful for other scripts.")
 	flag.BoolVar(&activeFlag, "active", false, "Print the currently active tab.")
-	flag.StringVar(&outputFmt, "printf", "%u\n", "The output format for tabs if -json is not specified (%u = url, %t = title, %g = group).")
-	flag.StringVar(&choosenChrome, "use", "chrome", "The output format for tabs if -json is not specified (%u = url, %t = title, %g = group).")
+	flag.StringVar(&outputFmt, "printf", "%u\n", "The output format for tabs if -json is not specified (%u = url, %t = title, %g = group, %i = id, %w = window id).")
+	flag.StringVar(&choosenChrome, "use", "chrome", "The chrome installation to use.")
 
 	flag.BoolVar(&deletedFlag, "deleted", false, "Include tabs which have been deleted.")
 	flag.BoolVar(&historyFlag, "history", false, "Include the history of each tab in the output.")
@@ -567,7 +571,7 @@ default
 			if win.Active {
 				for _, tab := range win.Tabs {
 					if tab.Active {
-						tabPrintf(outputFmt, tab, historyFlag)
+						tabPrintf(outputFmt, tab, historyFlag, win)
 					}
 				}
 			}
@@ -577,7 +581,7 @@ default
 			if deletedFlag || !win.Deleted {
 				for _, tab := range win.Tabs {
 					if deletedFlag || !tab.Deleted {
-						tabPrintf(outputFmt, tab, historyFlag)
+						tabPrintf(outputFmt, tab, historyFlag, win)
 					}
 				}
 			}
