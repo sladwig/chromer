@@ -501,10 +501,12 @@ func main() {
 	var deletedFlag bool
 	var historyFlag bool
 	var outputFmt string
+	var choosenChrome string
 
 	flag.BoolVar(&jsonFlag, "json", false, "Produce json formatted output. Note that this includes all tabs along with their history and any corresponding metadata. Useful for other scripts.")
 	flag.BoolVar(&activeFlag, "active", false, "Print the currently active tab.")
 	flag.StringVar(&outputFmt, "printf", "%u\n", "The output format for tabs if -json is not specified (%u = url, %t = title, %g = group).")
+	flag.StringVar(&choosenChrome, "use", "chrome", "The output format for tabs if -json is not specified (%u = url, %t = title, %g = group).")
 
 	flag.BoolVar(&deletedFlag, "deleted", false, "Include tabs which have been deleted.")
 	flag.BoolVar(&historyFlag, "history", false, "Include the history of each tab in the output.")
@@ -523,9 +525,19 @@ default
 
 	flag.Parse()
 
-	target := os.ExpandEnv("$HOME/.config/chromium")
+	chromePaths := map[string]string{
+			"chrome": "$HOME/Library/Application Support/Google/Chrome",
+			"chrome-canary": "$HOME/Library/Application Support/Google/Chrome Canary",
+			"chrome-dev": "$HOME/Library/Application Support/Google/Chrome Dev",
+			"brave": "$HOME/Library/Application Support/BraveSoftware/Brave-Browser",
+		}
+		// "chromium": "$HOME/Library/Application Support/BraveSoftware/Brave-Browser"
+	configPath := chromePaths[choosenChrome]
+
+	target := os.ExpandEnv(configPath)
 	if _, err := os.Stat(target); os.IsNotExist(err) {
-		target = os.ExpandEnv("$HOME/.config/chrome")
+		// target = os.ExpandEnv("$HOME/.config/chrome")
+		target = os.ExpandEnv(configPath)
 	}
 
 	if len(flag.Args()) >= 1 {
