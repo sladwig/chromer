@@ -229,12 +229,14 @@ type Tab struct {
 	Title   string         `json:"title"`
 	Deleted bool           `json:"deleted"`
 	Group   string         `json:"group"`
+	Id      uint32         `json:"id"`
 }
 
 type Window struct {
 	Tabs    []*Tab `json:"tabs"`
 	Active  bool   `json:"active"`
 	Deleted bool   `json:"deleted"`
+	Id      uint32   `json:"id"`
 }
 
 type HistoryItem struct {
@@ -308,7 +310,7 @@ func parse(path string) Result {
 			title := readString16(data)
 
 			t := getTab(id)
-
+			t.id = id
 			var item *histItem
 			for _, h := range t.history {
 				if h.idx == histIdx {
@@ -321,7 +323,6 @@ func parse(path string) Result {
 				item = &histItem{idx: histIdx}
 				t.history = append(t.history, item)
 			}
-
 			item.url = url
 			item.title = title
 		case kCommandSetSelectedTabInIndex: //Sets the active tab index in window, note that 'tab index' is a derived value and not present in any data.
@@ -399,7 +400,7 @@ func parse(path string) Result {
 
 	for _, w := range windows {
 		W := &Window{Active: w == activeWindow, Deleted: w.deleted}
-
+		W.Id = w.id
 		idx := 0
 		for _, t := range w.tabs {
 			groupName := ""
@@ -408,7 +409,7 @@ func parse(path string) Result {
 			}
 
 			T := &Tab{Active: idx == int(w.activeTabIdx), Deleted: t.deleted, Group: groupName}
-
+			T.Id = t.id
 			for _, h := range t.history {
 				T.History = append(T.History, &HistoryItem{h.url, h.title})
 				if h.idx == t.currentHistoryIdx { //Truncate history to avoid having to deal with trees TODO: find a better way to export this.
